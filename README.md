@@ -9,11 +9,18 @@ A phone-first web app for following your teams: live games, where to watch them 
 - **News**: stories about your teams, or everything from your leagues.
 - **Teams**: your favourites grouped by sport. Tap ＋ to follow any team from the Premier League, Championship, Liga Portugal, Saudi Pro League, A-League, AFL, NRL, Super Rugby, NBL, internationals and more.
 
-Data comes from ESPN's public site API, fetched directly by your browser. Favourites are saved on your device.
+Favourites are saved on your device.
+
+## Data sources
+- **ESPN public API** (fetched by your browser): scores, fixtures, match stats, lineups and news for football, AFL, NRL, rugby union and NBL; live cricket from ESPN's cricket scoreboard feed.
+- **Flashscore**: every team links to its Flashscore page (live, fixtures, results, news). Teams that no open feed covers (Australia U23/U20, Brisbane Lions W, Sherwood) open straight on Flashscore. Flashscore has no public API, so the app links to it and doesn't pull data from it.
+- **ESPNcricinfo**: links for cricket teams.
+
+Sources checked and not used: Squiggle (AFL) doesn't allow websites to fetch from it in visitors' browsers; TheSportsDB's free key only returns home games and limits team search.
 
 ## Limits
-- Cricket has no open ESPN feed, so cricket teams link to ESPNcricinfo.
-- AFLW, local clubs (e.g. Sherwood) and youth national teams aren't in ESPN's feed.
+- No cricket news feed; cricket shows only current and recent matches.
+- AFLW, local clubs and youth national teams have no open data feed, so they link out to Flashscore.
 - Broadcaster guide reflects rights as of Nov 2026. Rights change, so check with the broadcaster. Edit `AU_WATCH` in `js/config.js` to update.
 
 ## Run it

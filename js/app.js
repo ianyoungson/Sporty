@@ -1,4 +1,4 @@
-import { COMPETITIONS, DEFAULT_TEAMS, GROUP_ORDER, GROUP_ICON, AU_WATCH } from './config.js';
+import { COMPETITIONS, DEFAULT_TEAMS, GROUP_ORDER, GROUP_ICON, AU_WATCH, flashscoreUrl } from './config.js';
 import * as api from './api.js';
 
 // ---------- helpers ----------
@@ -36,6 +36,16 @@ let favs = store.get('teams', null) || structuredClone(DEFAULT_TEAMS);
 const logos = store.get('logos', {});   // fav id -> logo url
 const espnIds = store.get('ids', {});   // fav id -> { compKey: espn team id }
 const saveFavs = () => store.set('teams', favs);
+// Bring lists saved by older versions up to date (new data sources, new default teams).
+const DEFAULTS_VERSION = 2;
+if (store.get('defaultsVersion', 1) < DEFAULTS_VERSION) {
+  for (const d of DEFAULT_TEAMS) {
+    const f = favs.find(x => x.id === d.id);
+    if (f) Object.assign(f, d); else favs.push(structuredClone(d));
+  }
+  store.set('defaultsVersion', DEFAULTS_VERSION);
+  saveFavs();
+}
 let games = [];        // flattened games involving favourites
 let loadErrors = [];
 let lastLoad = 0;
@@ -84,6 +94,7 @@ async function loadGames(force = false) {
   const errs = [];
   const results = await Promise.all(comps.map(async key => {
     try {
+      if (key === 'cricket') return await loadCricket(force);
       const d = await api.scoreboard(key, undefined, force ? 0 : 25_000);
       const league = COMPETITIONS[key]?.name || d.leagues?.[0]?.name || key;
       return (d.events || []).map(ev => {
@@ -111,6 +122,29 @@ async function loadGames(force = false) {
   updateLiveBadge();
 }
 
+// Cricket comes from ESPN's header feed, grouped by series. Games use key "cricket/<seriesId>".
+async function loadCricket(force) {
+  const d = await api.cricket(force ? 0 : 25_000);
+  const cricketFavs = favs.filter(f => f.comps?.includes('cricket'));
+  const out = [];
+  for (const lg of d.sports?.[0]?.leagues || []) {
+    for (const e of lg.events || []) {
+      const cs = e.competitors || [];
+      const side = (c) => c && { id: c.id, name: c.displayName || c.name, logo: c.logo, score: c.score, winner: c.winner,
+        team: { id: c.id, displayName: c.displayName, shortDisplayName: c.shortDisplayName, name: c.name } };
+      const st = e.fullStatus?.type || {};
+      const g = { key: `cricket/${lg.slug || lg.id}`, id: e.id, date: new Date(e.date), league: lg.shortName || lg.name || 'Cricket',
+        state: st.state || e.status, detail: e.summary || st.shortDetail, home: side(cs.find(c => c.homeAway === 'home') || cs[0]),
+        away: side(cs.find(c => c.homeAway === 'away') || cs[1]), usTv: [], favs: [] };
+      for (const f of cricketFavs) for (const s of [g.home, g.away]) {
+        if (s && f.names.some(n => norm(n) === norm(s.name))) { g.favs.push(f.id); if (s.logo) logos[f.id] = s.logo; }
+      }
+      if (g.favs.length) out.push(g);
+    }
+  }
+  return out;
+}
+
 function updateLiveBadge() {
   const n = games.filter(g => g.state === 'in').length;
   const b = $('#live-badge');
@@ -124,7 +158,7 @@ function schedule(fn, ms) {
 
 // ---------- shared bits ----------
 function watchChips(key, usTv = []) {
-  const au = AU_WATCH[key] || [];
+  const au = AU_WATCH[key] || AU_WATCH[key.split('/')[0]] || [];
   if (!au.length && !usTv.length) return '';
   return `<div class="watch">📺 ${au.map(n => `<span class="chip tv">${esc(n)}</span>`).join('')}
     ${usTv.length ? `<span class="chip us" title="US broadcast (from ESPN)">US: ${esc(usTv.join(', '))}</span>` : ''}</div>`;
@@ -182,8 +216,12 @@ async function viewGames(root) {
 }
 
 async function viewGame(root, key, id) {
-  const comp = COMPETITIONS[key];
+  const comp = COMPETITIONS[key] || COMPETITIONS[key.split('/')[0]];
   setHeader(comp?.name || 'Match', true);
+  if (!games.length) await loadGames().catch(() => {});
+  const known = games.find(g => g.key === key && g.id === id);
+  const favsHere = favs.filter(f => known?.favs.includes(f.id));
+  const fsLinks = favsHere.map(f => `<a class="btn ghost small" href="${esc(flashscoreUrl(f))}" target="_blank" rel="noopener">${esc(f.name)} on Flashscore ↗</a>`).join('');
   if (!root.dataset.game || root.dataset.game !== key + id) {
     root.innerHTML = loading('Loading match…');
     root.dataset.game = key + id;
@@ -191,7 +229,11 @@ async function viewGame(root, key, id) {
   }
   let d;
   try { d = await api.summary(key, id); }
-  catch { root.innerHTML = `<div class="empty">Couldn't load this match. Check your connection and try again.</div>`; return; }
+  catch {
+    root.innerHTML = (known ? gameCard(known).replace(/^<a /, '<div ').replace(/<\/a>$/, '</div>') : '')
+      + `<div class="empty">Detailed stats aren't available for this match.</div>${fsLinks}`;
+    return;
+  }
   if (location.hash !== `#/game/${encodeURIComponent(key)}/${id}`) return;
 
   const hc = d.header?.competitions?.[0] || {};
@@ -236,6 +278,7 @@ async function viewGame(root, key, id) {
     </section>
     <div class="tabs">${tabs.map(([t]) => `<button class="tab ${t === active ? 'on' : ''}" data-t="${t}">${t}</button>`).join('')}</div>
     <div class="tabbody">${tabs.find(t => t[0] === active)[1]}</div>
+    ${fsLinks ? `<div class="links">${fsLinks}</div>` : ''}
     ${state === 'in' ? '<p class="note">Live — updates every 20 seconds.</p>' : ''}`;
   root.querySelectorAll('[data-t]').forEach(b => b.onclick = () => {
     root.dataset.tab = b.dataset.t;
@@ -380,7 +423,7 @@ function articleFor(a, fav) {
 
 async function collectNews(onlyFav) {
   const list = onlyFav ? [onlyFav] : favs;
-  const comps = [...new Set(list.flatMap(f => f.comps || []))];
+  const comps = [...new Set(list.flatMap(f => f.comps || []))].filter(k => k !== 'cricket');
   const res = await Promise.all(comps.map(k => api.news(k).then(d => (d.articles || []).map(a => ({ ...a, _comp: k }))).catch(() => [])));
   const seen = new Set();
   const all = res.flat().filter(a => a.headline && !seen.has(a.id ?? a.headline) && seen.add(a.id ?? a.headline));
@@ -410,7 +453,7 @@ async function viewNews(root) {
 function teamRow(f) {
   return `<div class="trow-team">
     <a href="#/team/${esc(f.id)}" class="tlink">${logoImg(logos[f.id] || f.logo, f.name, 'tile')}
-      <span class="tn">${esc(f.name)}</span><span class="flag">${esc(f.flag || '')}</span></a>
+      <span class="tn">${esc(f.name)}</span><span class="flag">${esc(f.flag || '')}</span>${f.linkOnly ? '<span class="chip fs">Flashscore</span>' : ''}</a>
     <button class="star" data-unfollow="${esc(f.id)}" aria-label="Unfollow ${esc(f.name)}">★</button></div>`;
 }
 
@@ -430,11 +473,14 @@ async function viewTeam(root, id) {
   const f = favs.find(x => x.id === id);
   if (!f) { location.hash = '#/teams'; return; }
   setHeader(f.name, true);
-  if (f.cricinfo) {
-    root.innerHTML = `<div class="team-hero">${logoImg(f.logo, f.name, 'blogo')}<h2>${esc(f.name)} ${esc(f.flag || '')}</h2><p>${esc(f.group)}</p></div>
-      <div class="card pad"><p>Live cricket scores aren't in ESPN's open feed, so this team opens on ESPNcricinfo.</p>
-      <a class="btn" href="${esc(f.cricinfo)}" target="_blank" rel="noopener">Open on ESPNcricinfo</a>
-      <p class="note">Usually on: Fox Cricket / Kayo, Seven / 7plus (home internationals).</p></div>`;
+  const fsBtns = `<div class="card pad"><h3 class="lu-head">More on Flashscore</h3><div class="btnrow">
+      ${f.fs ? ['', 'fixtures', 'results', 'news'].map(p => `<a class="btn ghost small" href="${esc(flashscoreUrl(f, p))}" target="_blank" rel="noopener">${p ? p[0].toUpperCase() + p.slice(1) : 'Live & summary'} ↗</a>`).join('')
+        : `<a class="btn ghost small" href="${esc(flashscoreUrl(f))}" target="_blank" rel="noopener">Find on Flashscore ↗</a>`}
+      ${f.cricinfo ? `<a class="btn ghost small" href="${esc(f.cricinfo)}" target="_blank" rel="noopener">ESPNcricinfo ↗</a>` : ''}</div></div>`;
+  if (f.linkOnly) {
+    root.innerHTML = `<div class="team-hero">${logoImg(logos[f.id] || f.logo, f.name, 'blogo')}<h2>${esc(f.name)} ${esc(f.flag || '')}</h2><p>${esc(f.group)}</p></div>
+      <div class="card pad"><p>No open data feed covers this team, so its scores, fixtures and news open on Flashscore.</p>
+      <a class="btn" href="${esc(flashscoreUrl(f))}" target="_blank" rel="noopener">Open on Flashscore ↗</a></div>`;
     return;
   }
   root.innerHTML = loading();
@@ -449,15 +495,18 @@ async function viewTeam(root, id) {
     ${next.length ? `<h2 class="sec">Next up</h2>${next.map(g => `<h3 class="day">${esc(dayLabel(g.date))}</h3>${gameCard(g)}`).join('')}` : ''}
     ${done.length ? `<h2 class="sec">Results</h2>${done.map(gameCard).join('')}` : ''}
     ${!mine.length ? '<div class="empty">No games found in the last week or next 4 weeks.</div>' : ''}
-    <h2 class="sec">News</h2><div id="tnews">${loading('Loading news…')}</div>`;
+    ${fsBtns}
+    ${f.comps?.some(k => k !== 'cricket') ? `<h2 class="sec">News</h2><div id="tnews">${loading('Loading news…')}</div>` : ''}`;
+  if (!$('#tnews', root)) return;
   const { mine: n } = await collectNews(f);
   const box = $('#tnews', root);
+  if (!box) return;
   if (box) box.innerHTML = n.length ? n.slice(0, 15).map(newsCard).join('') : '<div class="empty">No recent stories.</div>';
 }
 
 async function viewAdd(root) {
   setHeader('Add a team', true);
-  const opts = Object.entries(COMPETITIONS).map(([k, c]) => `<option value="${esc(k)}">${esc(c.group)} — ${esc(c.name)}</option>`).join('');
+  const opts = Object.entries(COMPETITIONS).filter(([k]) => k !== 'cricket').map(([k, c]) => `<option value="${esc(k)}">${esc(c.group)} — ${esc(c.name)}</option>`).join('');
   root.innerHTML = `<div class="card pad form">
       <label>Competition<select id="comp">${opts}</select></label>
       <label>Search<input id="q" type="search" placeholder="Team name"></label></div>

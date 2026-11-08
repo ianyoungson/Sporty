@@ -59,9 +59,12 @@ page.on('pageerror', e => errors.push(e.message));
 page.on('console', m => m.type() === 'error' && !m.text().includes('Failed to load resource') && errors.push(m.text()));
 await page.route('https://site.api.espn.com/**', r => {
   const u = new URL(r.request().url());
-  const comp = u.pathname.split('/sports/')[1].split('/').slice(0, 2).join('/');
+  const comp = (u.pathname.split('/sports/')[1] || '').split('/').slice(0, 2).join('/');
   let body = { events: [] };
-  if (u.pathname.endsWith('/scoreboard')) body = boards[comp] || { events: [] };
+  if (u.pathname.endsWith('/scoreboard/header')) body = { sports: [{ leagues: [{ slug: '9001', shortName: 'AUS v IND', events: [
+    { id: '777', date: iso(-3), fullStatus: { type: { state: 'in' } }, summary: 'Day 2 - IND trail by 120 runs',
+      competitors: [{ homeAway: 'home', displayName: 'Australia', score: '345/6' }, { homeAway: 'away', displayName: 'India', score: '225' }] }] }] }] };
+  else if (u.pathname.endsWith('/scoreboard')) body = boards[comp] || { events: [] };
   else if (u.pathname.endsWith('/summary')) body = summary;
   else if (u.pathname.endsWith('/news')) body = comp === 'soccer/eng.1' ? news : { articles: [] };
   else if (u.pathname.endsWith('/teams')) body = { sports: [{ leagues: [{ teams: [{ team: spurs }, { team: ars }, { team: hull }] }] }] };
@@ -82,5 +85,11 @@ const newsCount = await page.locator('.news').count();
 await shot('teams', '#/teams', '.trow-team');
 await shot('team', '#/team/spurs', '.team-hero');
 await shot('add', '#/add', '.star');
-console.log(JSON.stringify({ liveCount, statRows, newsCount, errors }));
+await shot('linkonly', '#/team/lions-w', '.team-hero');
+const fsHref = await page.locator('a.btn').first().getAttribute('href');
+await shot('cricket', '#/game/cricket%2F9001/777', '.empty, .scorebox');
+const cricketGameShown = await page.locator('.links a').count();
+await page.goto('http://localhost:8765/#/games'); await page.waitForSelector('.game');
+const cricketCard = await page.locator('.game', { hasText: 'India' }).count();
+console.log(JSON.stringify({ liveCount, statRows, newsCount, fsHref, cricketCard, cricketGameShown, errors }));
 await browser.close(); server.close();

@@ -139,3 +139,7 @@ h4 { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spa
 .team-hero p { margin: 0; color: var(--muted); font-size: 13px; }
 .form label { display: grid; gap: 6px; color: var(--muted); font-size: 13px; margin-bottom: 10px; }
 .form select, .form input { font: inherit; color: var(--text); background: var(--bg); border: 1px solid var(--line); border-radius: 10px; padding: 10px; }
+.btn.small { display: inline-block; padding: 8px 12px; font-size: 13px; margin: 0; }
+.btnrow, .links { display: flex; flex-wrap: wrap; gap: 8px; }
+.links { margin: 6px 0 10px; }
+.chip.fs { padding: 1px 7px; font-size: 10px; color: #ff9b5c; border-color: #5a3420; margin-left: 4px; flex: none; }
