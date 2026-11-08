@@ -25,6 +25,7 @@ export const COMPETITIONS = {
   'rugby/244293':            { name: 'Rugby Championship',     group: 'Rugby' },
   'rugby/289234':            { name: 'Test Match',             group: 'Rugby' },
   'basketball/nbl':          { name: 'NBL',                    group: 'Basketball' },
+  'cricket':                 { name: 'Cricket',                group: 'Cricket' },
 };
 
 const CLUB_EU = ['soccer/uefa.champions', 'soccer/uefa.europa', 'soccer/uefa.europa.conf'];
@@ -35,19 +36,24 @@ const ENGLAND = ['soccer/eng.1', 'soccer/eng.2', 'soccer/eng.fa', 'soccer/eng.le
 export const DEFAULT_TEAMS = [
   { id: 'aus-w-soc',  name: 'Australia W', group: 'Football', flag: '🇦🇺', names: ['Australia'], comps: ['soccer/fifa.friendly.w', 'soccer/fifa.wwc'] },
   { id: 'aus-soc',    name: 'Australia', group: 'Football', flag: '🇦🇺', names: ['Australia'], comps: ['soccer/fifa.friendly', 'soccer/fifa.worldq.afc', 'soccer/afc.asian.cup'] },
-  { id: 'roar',       name: 'Brisbane Roar', group: 'Football', flag: '🇦🇺', names: ['Brisbane Roar'], comps: ['soccer/aus.1'] },
-  { id: 'hull',       name: 'Hull', group: 'Football', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', names: ['Hull City', 'Hull'], comps: ENGLAND },
-  { id: 'sporting',   name: 'Sporting', group: 'Football', flag: '🇵🇹', names: ['Sporting CP', 'Sporting Lisbon', 'Sporting'], comps: ['soccer/por.1', 'soccer/por.taca.portugal', ...CLUB_EU] },
-  { id: 'spurs',      name: 'Tottenham', group: 'Football', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', names: ['Tottenham Hotspur', 'Tottenham', 'Spurs'], comps: ENGLAND },
-  { id: 'wrexham',    name: 'Wrexham', group: 'Football', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', names: ['Wrexham'], comps: ENGLAND },
-  { id: 'nassr',      name: 'Al Nassr', group: 'Football', flag: '🇸🇦', names: ['Al Nassr', 'Al Nassr Riyadh'], comps: ['soccer/ksa.1', 'soccer/afc.champions'] },
-  { id: 'broncos',    name: 'Brisbane Broncos', group: 'League', flag: '🇦🇺', names: ['Brisbane Broncos', 'Broncos'], comps: ['rugby-league/3'] },
+  { id: 'roar', fs: 'brisbane-roar/SSr7kDGC',       name: 'Brisbane Roar', group: 'Football', flag: '🇦🇺', names: ['Brisbane Roar'], comps: ['soccer/aus.1'] },
+  { id: 'hull', fs: 'hull/S66R0t75',       name: 'Hull', group: 'Football', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', names: ['Hull City', 'Hull'], comps: ENGLAND },
+  { id: 'sporting', fs: 'sporting/tljXuHBC',   name: 'Sporting', group: 'Football', flag: '🇵🇹', names: ['Sporting CP', 'Sporting Lisbon', 'Sporting'], comps: ['soccer/por.1', 'soccer/por.taca.portugal', ...CLUB_EU] },
+  { id: 'spurs', fs: 'tottenham/UDg08Ohm',      name: 'Tottenham', group: 'Football', flag: '🏴󠁧󠁢󠁥󠁮󠁧󠁿', names: ['Tottenham Hotspur', 'Tottenham', 'Spurs'], comps: ENGLAND },
+  { id: 'wrexham', fs: 'wrexham/IgO7K1ZA',    name: 'Wrexham', group: 'Football', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', names: ['Wrexham'], comps: ENGLAND },
+  { id: 'nassr', fs: 'al-nassr/h4I89ZuE',      name: 'Al Nassr', group: 'Football', flag: '🇸🇦', names: ['Al Nassr', 'Al Nassr Riyadh'], comps: ['soccer/ksa.1', 'soccer/afc.champions'] },
+  { id: 'broncos', fs: 'brisbane-broncos/8llKIOZC',    name: 'Brisbane Broncos', group: 'League', flag: '🇦🇺', names: ['Brisbane Broncos', 'Broncos'], comps: ['rugby-league/3'] },
   { id: 'wallabies',  name: 'Australia', group: 'Rugby', flag: '🇦🇺', names: ['Australia'], comps: ['rugby/244293', 'rugby/289234'] },
-  { id: 'reds',       name: 'Reds', group: 'Rugby', flag: '🇦🇺', names: ['Reds', 'Queensland Reds'], comps: ['rugby/242041'] },
-  { id: 'lions',      name: 'Brisbane Lions', group: 'AFL', flag: '🇦🇺', names: ['Brisbane Lions', 'Brisbane'], comps: ['australian-football/afl'] },
-  { id: 'geelong',    name: 'Geelong Cats', group: 'AFL', flag: '🇦🇺', names: ['Geelong Cats', 'Geelong'], comps: ['australian-football/afl'] },
-  { id: 'aus-cricket',     name: 'Australia', group: 'Cricket', flag: '🇦🇺', cricinfo: 'https://www.espncricinfo.com/team/australia-2' },
-  { id: 'aus-u19-cricket', name: 'Australia U19', group: 'Cricket', flag: '🇦🇺', cricinfo: 'https://www.espncricinfo.com/team/australia-under-19s-2' },
+  { id: 'reds', fs: 'queensland-reds/bR4aayse',       name: 'Reds', group: 'Rugby', flag: '🇦🇺', names: ['Reds', 'Queensland Reds'], comps: ['rugby/242041'] },
+  { id: 'lions', fs: 'brisbane-lions/dbrzcXC5',      name: 'Brisbane Lions', group: 'AFL', flag: '🇦🇺', names: ['Brisbane Lions', 'Brisbane'], comps: ['australian-football/afl'] },
+  { id: 'geelong', fs: 'geelong-cats/hCAS2n4i',    name: 'Geelong Cats', group: 'AFL', flag: '🇦🇺', names: ['Geelong Cats', 'Geelong'], comps: ['australian-football/afl'] },
+  { id: 'aus-cricket',     name: 'Australia', group: 'Cricket', flag: '🇦🇺', names: ['Australia'], comps: ['cricket'], cricinfo: 'https://www.espncricinfo.com/team/australia-2' },
+  { id: 'aus-u19-cricket', name: 'Australia U19', group: 'Cricket', flag: '🇦🇺', names: ['Australia Under-19s', 'Australia U19'], comps: ['cricket'], cricinfo: 'https://www.espncricinfo.com/team/australia-under-19s-2' },
+  // Not in any open data feed: scores and fixtures open on Flashscore.
+  { id: 'aus-u23',    name: 'Australia U23', group: 'Football', flag: '🇦🇺', fs: 'australia/ShrE7HEq', linkOnly: true },
+  { id: 'aus-u20',    name: 'Australia U20', group: 'Football', flag: '🇦🇺', fs: 'australia/UVx0PfYB', linkOnly: true },
+  { id: 'lions-w',    name: 'Brisbane Lions W', group: 'AFL', flag: '🇦🇺', fs: 'brisbane-lions/K0GiYEba', linkOnly: true },
+  { id: 'sherwood',   name: 'Sherwood', group: 'AFL', flag: '🇦🇺', fsSearch: 'Sherwood Magpies AFL', linkOnly: true },
 ];
 
 export const GROUP_ORDER = ['Football', 'AFL', 'League', 'Rugby', 'Basketball', 'Cricket'];
@@ -78,4 +84,13 @@ export const AU_WATCH = {
   'rugby/244293':            ['Stan Sport', 'Nine / 9Now'],
   'rugby/289234':            ['Stan Sport', 'Nine / 9Now'],
   'basketball/nbl':          ['ESPN (Foxtel)', 'Kayo', 'Disney+'],
+  'cricket':                 ['Kayo / Fox Cricket', '7plus (home Tests)'],
 };
+
+const FS = 'https://www.flashscore.com.au';
+// Flashscore link for a team (page = '', 'fixtures', 'results', 'news').
+export function flashscoreUrl(team, page = '') {
+  if (team.fs) return `${FS}/team/${team.fs}/${page ? page + '/' : ''}`;
+  const q = team.fsSearch || `${team.name} ${team.group}`;
+  return `https://www.google.com/search?q=${encodeURIComponent('site:flashscore.com.au ' + q)}`;
+}

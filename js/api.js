@@ -29,3 +29,7 @@ export const news = (comp) => get(`${BASE}/${comp}/news?limit=50`, 5 * 60_000);
 export const teams = (comp) => get(`${BASE}/${comp}/teams?limit=200`, 60 * 60_000);
 
 export const clearCache = () => cache.clear();
+
+// Current/recent/upcoming cricket matches across all series (ESPN's site header feed).
+export const cricket = (ttl) =>
+  get('https://site.api.espn.com/apis/personalized/v2/scoreboard/header?sport=cricket', ttl);
